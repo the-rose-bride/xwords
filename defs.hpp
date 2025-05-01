@@ -6,9 +6,10 @@
 // Configurable hash defines
 #define BOARD_DEFAULT_EMPTY_CHAR '.'
 
-#define GAME_WIDTH 14
-#define GAME_HEIGHT 14
-#define GAME_SIZE 14
+#define GAME_SIZE 30
+
+#define MIN_WORD_LENGTH 4
+#define MAX_WORD_LENGTH 15
 
 #define DICTIONARY_FILE "/usr/share/dict/words"
 

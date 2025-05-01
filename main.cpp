@@ -17,8 +17,8 @@ private:
 
 public:
   // Constructors
-  Game() : board(GAME_WIDTH,
-                 GAME_HEIGHT),
+  Game() : board(GAME_SIZE,
+                 GAME_SIZE),
            words()
   {}
 
@@ -27,8 +27,8 @@ public:
                    words()
   {}
   
-  Game(std::vector<Word> &words) : board(GAME_WIDTH,
-                                          GAME_HEIGHT),
+  Game(std::vector<Word> &words) : board(GAME_SIZE,
+                                         GAME_SIZE),
                                     words(words)
   {}
                                     
@@ -54,7 +54,7 @@ public:
 
 int main(int argc, char **argv)
 {
-  int seed = 1;
+  int seed = 0;
 
   if (argc >= 2)
   {

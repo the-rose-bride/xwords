@@ -28,12 +28,26 @@ public:
 
   void render()
   {
+    bool border = false;
     for (int i = 0; i < height; ++i) {
-      for (int j = 0; j < width; ++j) {
-        putchar(board[i][j]);
-        putchar(' ');
+      if (border && i == 0) {
+        printf("   ");
+        for (int j = 0; j < width; ++j)
+        {
+          printf("%02d ", (j + 1));
+        }
+        printf("\n");
       }
-      putchar('\n');
+      
+      for (int j = 0; j < width; ++j) {
+        if (border && j == 0)
+        {
+          printf("%02d ", (i + 1));
+        }
+        putchar(board[i][j]);
+        printf("  ");
+      }
+      printf("\n");
     }
   }
 

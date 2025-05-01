@@ -26,6 +26,7 @@ int read_valid_words_from_file_into_vector(const char *fileName, std::vector<con
     strtok(line, "\n"); // trim newline
 
     int i, len = strlen(line);
+    if (len < MIN_WORD_LENGTH or len > MAX_WORD_LENGTH) continue;
     for (i = 0; i < len; ++i) {
       char c = (line[i]);
       if (c < 'a' || c > 'z') break;
@@ -183,18 +184,23 @@ bool check_invalid_intersect_between_two_words(Word word1, Word word2)
   // word1 is across
   // the index into word1 is given by the diff word2_x - word1_x
   int across_index = word2.start.first - word1.start.first;
+
+  if (across_index == -1 || across_index == strlen(word1.word)) return true;
   if (across_index < 0 || across_index > strlen(word1.word)) return false;
+  
   int down_index = word1.start.second - word2.start.second;
+
+  if (down_index == -1 || down_index == strlen(word2.word)) return true;
   if (down_index < 0 || down_index > strlen(word2.word)) return false;
 
   // if there is an actual intersect check the character
   if (word1.word[across_index] != word2.word[down_index])
   {
-    fprintf(stderr, "Collision between %s and %s - %c != %c\n",
-            word1.word,
-            word2.word,
-            word1.word[across_index],
-            word2.word[down_index]);
+    // fprintf(stderr, "Collision between %s and %s - %c != %c\n",
+    //         word1.word,
+    //         word2.word,
+    //         word1.word[across_index],
+    //         word2.word[down_index]);
     return true;
   }
 
@@ -225,7 +231,7 @@ Word try_to_place_word(const char *word, std::vector<Word> &entries)
   get_all_intersections_for_new_word(word, entries, board_intersections);
   if (0 == board_intersections.size())
   {
-    fprintf(stderr, "No intersection to add %s\n", word);
+    //fprintf(stderr, "No intersection to add %s\n", word);
     return noWord;
   }
   
@@ -250,11 +256,11 @@ Word try_to_place_word(const char *word, std::vector<Word> &entries)
       if (!is_word_and_offset_valid(word, dir, offset)
         || get_collision(entries, retWord))
       {
-        fprintf(stderr,
-                "Word 3 %s is not valid to add at %d,%d\n",
-                word,
-                offset.first,
-                offset.second);
+        // fprintf(stderr,
+        //         "%s is not valid to add at %d,%d\n",
+        //         word,
+        //         offset.first,
+        //         offset.second);
         continue;
       }
 
@@ -268,17 +274,18 @@ Word try_to_place_word(const char *word, std::vector<Word> &entries)
 // The algorithm
 void CrossWordsAlgorithm::run(std::vector<Word> &entries, int seed)
 {
-  srand(seed); // set random seed
+  srand(seed ? seed : time(NULL)); // set random seed
   
   // Read the dictionary in 
   std::vector<const char *> words;
   read_valid_words_from_file_into_vector(dictFile, words);
   printf("Read %zu words from %s\n", words.size(), dictFile);
 
+  // This method is nicer than cramming into the corner
   // select two random words
   const char *word1 = get_random_word(words);
   const char *word2 = get_random_word(words);
-  
+
   // get a list of possible intersections
   IsectList isects;
   get_intersections_between_two_words(word1, word2, isects);
@@ -287,22 +294,28 @@ void CrossWordsAlgorithm::run(std::vector<Word> &entries, int seed)
     fprintf(stderr, "No intersections between %s and %s\n", word1, word2);
     return;
   }
-  
+
   // add those two words to the list
   printf("Placing %s and %s\n", word1, word2);
   Isect first_isect = isects[0];
   entries.push_back(Word(E_Across, word1, Offset(0, first_isect.second)));
   entries.push_back(Word(E_Down, word2, Offset(first_isect.first, 0)));
 
+  // or just put the first random word in the corner
+  // const char *firstWord = get_random_word(words);
+  // entries.push_back(Word(E_Across, firstWord, Offset(0, 0)));
+
   // try 100 more times
-  int maxAttempts = 100;
-  while (maxAttempts--)
+  int fail = 0;
+  while (fail++ < 100)
   {
+    if (fail % 1000 == 0) fprintf(stderr, "%d tries since last success\n", fail);
     const char *word3 = get_random_word(words);
     Word place = try_to_place_word(word3, entries);
     if (strlen(place.word)) {
-      printf("Added third word %s\n", word3);
+      printf("Added %s\n", word3);
       entries.push_back(place);
+      fail = 0;
       //break; // success
     }
   }
