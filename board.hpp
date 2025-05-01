@@ -37,17 +37,18 @@ public:
     }
   }
 
-  void addWord(const Word& word)
+  int addWord(const Word& word)
   {
     int x = word.start.first;
     int y = word.start.second;
-
     for (int i = 0; i < strlen(word.word); ++i)
     {
+      if (x < 0 || y < 0 || x >= width || y >= height) return 1;
       board[y][x] = word.word[i];
       if (E_Across == word.dir) x++;
       else if (E_Down == word.dir) y++;
     }
+    return 0;
   }
 };
 

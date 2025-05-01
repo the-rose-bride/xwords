@@ -35,22 +35,36 @@ public:
   // Start playing
   void start() {
     for (int i = 0; i < words.size(); ++i) {
-      board.addWord(words[i]);
+      if (0 != board.addWord(words[i]))
+      {
+        fprintf(stderr,
+                "Failed to add %s to board - out of bounds.\n",
+                words[i].word);
+      }
     }
     board.render();
   }
 
   // Algorithm to make a game
-  void generate(const char *dictFile) {
+  void generate(const char *dictFile, int seed) {
     CrossWordsAlgorithm alg(dictFile);
-    alg.run(words); // should output a list of words - just printf for now
+    alg.run(words, seed); // should output a list of words - just printf for now
   }
 };
 
 int main(int argc, char **argv)
 {
+  int seed = 1;
+
+  if (argc >= 2)
+  {
+    int new_seed = atoi(argv[1]);
+    if (new_seed) seed = new_seed;
+    printf("Running with seed=%d\n", seed);
+  }
+  
   Game game(GAME_SIZE);
-  game.generate(DICTIONARY_FILE); // load the linux dictionary
+  game.generate(DICTIONARY_FILE, seed); // load the linux dictionary
   game.start();
   return 0;
 }

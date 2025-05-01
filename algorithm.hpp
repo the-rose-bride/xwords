@@ -11,7 +11,7 @@ private:
   const char *dictFile; // set by ctor
 public:
   CrossWordsAlgorithm(const char *dictFile) : dictFile(dictFile){}
-  void run(std::vector<Word> &entries);
+  void run(std::vector<Word> &entries, int seed);
 };
 
 #endif // ALGORITHM_H
