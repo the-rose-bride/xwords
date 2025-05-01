@@ -29,5 +29,4 @@ struct Word {
   {}
 };
 
-
 #endif // DEFS_H
