@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <ctype.h>
 
 class Board
 {
@@ -44,7 +45,7 @@ public:
         {
           printf("%02d ", (i + 1));
         }
-        putchar(board[i][j]);
+        putchar(toupper(board[i][j]));
         printf("  ");
       }
       printf("\n");

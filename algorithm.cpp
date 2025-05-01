@@ -6,6 +6,9 @@
 #include <ctype.h>
 #include <ctime>
 
+#include <algorithm>
+#include <random>
+
 typedef std::vector<Isect> IsectList;
 
 // Helper functions
@@ -228,18 +231,30 @@ Word try_to_place_word(const char *word, std::vector<Word> &entries)
   
   // find all intersections on the board
   std::vector<WordAndIsects> board_intersections;
+
+
+  // TODO: Can this only return valid intersections?
   get_all_intersections_for_new_word(word, entries, board_intersections);
+  
   if (0 == board_intersections.size())
   {
-    //fprintf(stderr, "No intersection to add %s\n", word);
+    fprintf(stderr, "No intersection to add %s\n", word);
     return noWord;
   }
+
+  // Shuffle the words
+  auto rng = std::default_random_engine {};
+  std::shuffle(std::begin(board_intersections), std::end(board_intersections), rng);
+
+  // Count all possible options at this juncture
   
   // Loop over first the words, and then the possible intersects to add a third
   // word to he board.
   for (int i = 0; i < board_intersections.size(); ++i)
   {
     WordAndIsects board_isect = board_intersections[i];
+    // Then shuffle the possible intersections
+    std::shuffle(std::begin(board_isect.second), std::end(board_isect.second), rng);
     Word word_on_board = board_isect.first;
     
     for (int j = 0; j < board_isect.second.size(); ++j)
@@ -250,17 +265,10 @@ Word try_to_place_word(const char *word, std::vector<Word> &entries)
 
       Word retWord(dir, word, offset);
       
-      bool collision = get_collision(entries, retWord);
-      
       // check that this is valid before adding
-      if (!is_word_and_offset_valid(word, dir, offset)
-        || get_collision(entries, retWord))
+      if (   !is_word_and_offset_valid(word, dir, offset)
+          || get_collision(entries, retWord))
       {
-        // fprintf(stderr,
-        //         "%s is not valid to add at %d,%d\n",
-        //         word,
-        //         offset.first,
-        //         offset.second);
         continue;
       }
 
@@ -283,23 +291,32 @@ void CrossWordsAlgorithm::run(std::vector<Word> &entries, int seed)
 
   // This method is nicer than cramming into the corner
   // select two random words
-  const char *word1 = get_random_word(words);
-  const char *word2 = get_random_word(words);
 
-  // get a list of possible intersections
   IsectList isects;
-  get_intersections_between_two_words(word1, word2, isects);
 
-  if (0 == isects.size()) {
-    fprintf(stderr, "No intersections between %s and %s\n", word1, word2);
-    return;
+  while (true)
+  {
+    const char *word1 = get_random_word(words);
+    const char *word2 = get_random_word(words);
+
+    // get a list of possible intersections
+    get_intersections_between_two_words(word1, word2, isects);
+
+    if (0 == isects.size()) {
+      fprintf(stderr, "No intersections between %s and %s\n", word1, word2);
+      continue;
+    }
+
+    // add those two words to the list
+    printf("Placing %s and %s\n", word1, word2);
+  
+    // Isect first_isect = isects[rand() % isects.size()];
+    Isect first_isect = isects[isects.size() - 1];
+  
+    entries.push_back(Word(E_Across, word1, Offset(0, first_isect.second)));
+    entries.push_back(Word(E_Down, word2, Offset(first_isect.first, 0)));
+    break;
   }
-
-  // add those two words to the list
-  printf("Placing %s and %s\n", word1, word2);
-  Isect first_isect = isects[0];
-  entries.push_back(Word(E_Across, word1, Offset(0, first_isect.second)));
-  entries.push_back(Word(E_Down, word2, Offset(first_isect.first, 0)));
 
   // or just put the first random word in the corner
   // const char *firstWord = get_random_word(words);
