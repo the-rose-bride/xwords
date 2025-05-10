@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <vector>
 #include <utility>
+#include <unistd.h>
 
 #include "defs.hpp"
 #include "board.hpp"
@@ -54,17 +55,45 @@ public:
 
 int main(int argc, char **argv)
 {
+  // config overrides
   int seed = 0;
-
-  if (argc >= 2)
-  {
-    int new_seed = atoi(argv[1]);
-    if (new_seed) seed = new_seed;
-    printf("Running with seed=%d\n", seed);
-  }
+  int size = GAME_SIZE;
+  const char *dict_file = DICTIONARY_FILE;
   
-  Game game(GAME_SIZE);
-  game.generate(DICTIONARY_FILE, seed); // load the linux dictionary
+  while (1)
+  {
+    const char *shortopts = "s:S:d:";
+
+    int c = getopt(argc, argv, shortopts);
+    if (-1 == c) break;
+
+    int read_int = 0;
+    
+    switch (c)
+    {
+    case 's':
+      read_int = atoi(optarg);
+      if (read_int) size = read_int;
+      printf("Running with size %dx%d\n", size, size);
+      break;
+    case 'S':
+      read_int = atoi(optarg);
+      if (read_int) seed = read_int;
+      printf("Running with seed=%d\n", seed);
+      break;      
+
+    case 'd':
+      if (access(optarg, F_OK) == 0)
+        dict_file = optarg;
+      else
+        printf("Could not find file %s\n", optarg);
+      printf("Using dict: %s\n", dict_file ? "dict_file" : "DEFAULT");
+      break;
+    }
+  }
+
+  Game game(size);
+  game.generate(dict_file, seed);
   game.start();
   return 0;
 }
